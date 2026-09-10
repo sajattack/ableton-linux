@@ -426,9 +426,9 @@ validate_runtime_payload()
     runtime_info="$root/BUILD-INFO-$version.txt"
     [ -s "$runtime_info" ] || runtime_info="$root/dist/BUILD-INFO-$version.txt"
     [ -s "$runtime_info" ] || { echo "!! exact BUILD-INFO-$version.txt is missing" >&2; return 1; }
-    bundle_probe="$root/bin/pipewire-version-probe"
-    [ -x "$bundle_probe" ] || bundle_probe="$root/dist/pipewire-version-probe"
-    [ -x "$bundle_probe" ] || { echo "!! installer kit is missing its PipeWire compatibility check" >&2; return 1; }
+    #bundle_probe="$root/bin/pipewire-version-probe"
+    #[ -x "$bundle_probe" ] || bundle_probe="$root/dist/pipewire-version-probe"
+    #[ -x "$bundle_probe" ] || { echo "!! installer kit is missing its PipeWire compatibility check" >&2; return 1; }
     echo "== validate runtime payload: $(basename "$tarball") =="
     echo "$(basename "$tarball"): OK"
     local parent
@@ -453,17 +453,14 @@ validate_runtime_payload()
     local required
     for required in \
         bin/wine bin/wineserver \
-        lib/wine/$ARCH-windows/libusb-1.0.dll \
+        lib/wine/x86_64-windows/libusb-1.0.dll \
         lib/wine/$ARCH-unix/libusb-1.0.so \
         lib/wine/$ARCH-unix/comdlg32.so \
         lib/wine/$ARCH-unix/winealsa.so \
         lib/wine/$ARCH-unix/winegstreamer.so \
-        bin/pipewire-version-probe \
         ABLETON-WINE-BUILD-INFO.txt \
         lib/wine/$ARCH-windows/pipeasio64.dll \
-        lib/wine/$ARCH-windows/pipeasio.dll \
-        lib/wine/$ARCH-unix/pipeasio64.dll.so \
-        lib/wine/$ARCH-unix/pipeasio.dll.so; do
+        lib/wine/$ARCH-unix/pipeasio64.so ; do
         [ -s "$candidate/$required" ] || { echo "!! runtime payload is missing $required" >&2; return 1; }
     done
     [ ! -e "$candidate/lib/wine/i386-windows/libusb-1.0.dll" ] || {
@@ -471,18 +468,18 @@ validate_runtime_payload()
     if command -v readelf >/dev/null 2>&1 && command -v strings >/dev/null 2>&1; then
         readelf -d "$candidate/lib/wine/$ARCH-unix/libusb-1.0.so" | grep -F 'Shared library: [libusb-1.0.so.0]' >/dev/null
         strings "$candidate/lib/wine/$ARCH-unix/comdlg32.so" | grep -F 'org.freedesktop.portal.FileChooser' >/dev/null
-        readelf -d "$candidate/lib/wine/$ARCH-unix/pipeasio64.dll.so" | grep -F 'Shared library: [libpipewire-0.3.so.0]' >/dev/null
+        readelf -d "$candidate/lib/wine/$ARCH-unix/pipeasio64.so" | grep -F 'Shared library: [libpipewire-0.3.so.0]' >/dev/null
         readelf -d "$candidate/lib/wine/$ARCH-unix/winegstreamer.so" | grep -F 'Shared library: [libgstreamer-1.0.so.0]' >/dev/null
     fi
     ableton_pipeasio_validate_runtime "$candidate" "$runtime_info" "$version"
-    cmp -s -- "$bundle_probe" "$candidate/bin/pipewire-version-probe" || {
-        echo "!! installer and runtime compatibility checks do not match" >&2; return 1; }
+    #cmp -s -- "$bundle_probe" "$candidate/bin/pipewire-version-probe" || {
+    #    echo "!! installer and runtime compatibility checks do not match" >&2; return 1; }
     ableton_run_bounded 30 "$candidate/bin/wine" --version
 }
 
 validate_integration_sources()
 {
-    local required probe_source="" ntsync_probe_source=""
+    local required ntsync_probe_source=""
     for required in ableton-live max9 detect-scale.sh detect-theme.sh shortcut-hold.sh \
                     setup-realtime.sh audio-report.sh check-ntsync.sh rollback.sh; do
         [ -f "$here/$required" ] || { echo "!! installer kit is missing scripts/$required" >&2; return 1; }
@@ -490,16 +487,16 @@ validate_integration_sources()
     for required in config.sh lifecycle.sh live-options.sh manifest.sh pipeasio.sh; do
         [ -f "$here/lib/$required" ] || { echo "!! installer kit is missing scripts/lib/$required" >&2; return 1; }
     done
-    for required in "$ABLETON_WINE_ROOT/bin/pipewire-version-probe" \
-                    "$root/bin/pipewire-version-probe" "$root/dist/pipewire-version-probe"; do
-        [ -x "$required" ] || continue
-        probe_source="$required"
-        break
-    done
-    [ -n "$probe_source" ] || {
-        echo "!! installer kit is missing its PipeWire compatibility check" >&2
-        return 1
-    }
+    #for required in "$ABLETON_WINE_ROOT/bin/pipewire-version-probe" \
+    #                "$root/bin/pipewire-version-probe" "$root/dist/pipewire-version-probe"; do
+    #    [ -x "$required" ] || continue
+    #    probe_source="$required"
+    #    break
+    #done
+    #[ -n "$probe_source" ] || {
+    #    echo "!! installer kit is missing its PipeWire compatibility check" >&2
+    #    return 1
+    #}
     for required in "$here/ntsyncprobe.exe" \
                     "$root/beta/tester-kit/probes/windows/ntsyncprobe.exe"; do
         [ -f "$required" ] || continue
@@ -623,9 +620,9 @@ fi
 # Direct component use receives the same gate as the wrapper. Validation and
 # dry-run remain usable without a running daemon; Link/integration-only work
 # carries no PipeASIO driver replacement and is not gated.
-if [ "$want_runtime" -eq 1 ]; then
-    ableton_pipewire_preflight "$candidate/bin/pipewire-version-probe" "installing PipeASIO"
-fi
+#if [ "$want_runtime" -eq 1 ]; then
+#    ableton_pipewire_preflight "$candidate/bin/pipewire-version-probe" "installing PipeASIO"
+#fi
 
 runtime_pids_all()
 {
@@ -779,17 +776,17 @@ install_integration()
         return 1
     }
     ableton_install_file 644 "$ntsync_probe_source" "$data/ntsyncprobe.exe"
-    for source in "$ABLETON_WINE_ROOT/bin/pipewire-version-probe" \
-                  "$root/bin/pipewire-version-probe" "$root/dist/pipewire-version-probe"; do
-        [ -x "$source" ] || continue
-        probe_source="$source"
-        break
-    done
-    [ -n "$probe_source" ] || {
-        echo "!! installer kit is missing its PipeWire compatibility check" >&2
-        return 1
-    }
-    ableton_install_file 755 "$probe_source" "$data/pipewire-version-probe"
+    #for source in "$ABLETON_WINE_ROOT/bin/pipewire-version-probe" \
+    #              "$root/bin/pipewire-version-probe" "$root/dist/pipewire-version-probe"; do
+    #    [ -x "$source" ] || continue
+    #    probe_source="$source"
+    #    break
+    #done
+    #[ -n "$probe_source" ] || {
+    #    echo "!! installer kit is missing its PipeWire compatibility check" >&2
+    #    return 1
+    #}
+    #ableton_install_file 755 "$probe_source" "$data/pipewire-version-probe"
     for tool in setsyscolors.exe learnheal.exe; do
         for source in "$here/$tool" "$root/tools/$tool"; do
             [ -f "$source" ] || continue

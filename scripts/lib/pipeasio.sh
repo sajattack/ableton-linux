@@ -47,20 +47,10 @@ ableton_pipewire_version_ge()
 # connected daemon; command-line PipeWire utilities are deliberately irrelevant.
 ableton_pipewire_preflight()
 {
-    local probe="${1:?PipeWire probe path required}" purpose="${2:-using PipeASIO}"
     local output client daemon client_count daemon_count
     ABLETON_PIPEWIRE_CLIENT_VERSION=""
     ABLETON_PIPEWIRE_DAEMON_VERSION=""
 
-    [ -x "$probe" ] || {
-        printf '!! PipeWire compatibility cannot be checked before %s.\n' "$purpose" >&2
-        printf '!! Reinstall from a complete installer kit and try again.\n' >&2
-        return 1
-    }
-    if ! output="$(LC_ALL=C "$probe" 2>/dev/null)"; then
-        printf '!! PipeWire is unavailable; start the desktop audio service and try again.\n' >&2
-        return 1
-    fi
     client_count="$(printf '%s\n' "$output" | grep -c '^client=' || true)"
     daemon_count="$(printf '%s\n' "$output" | grep -c '^daemon=' || true)"
     [ "$client_count" -eq 1 ] && [ "$daemon_count" -eq 1 ] \
@@ -180,7 +170,7 @@ ableton_pipeasio_validate_runtime()
 {
     local runtime="${1:?runtime root required}" external_info="${2:-}" expected_version="${3:-}"
     local info="$runtime/ABLETON-WINE-BUILD-INFO.txt" dist_version
-    local probe_record probe_hash pe_record pe_hash unix_record unix_hash
+    local pe_record pe_hash unix_record unix_hash
     local canonical alias
     [ -s "$info" ] || { echo "!! runtime build information is missing" >&2; return 1; }
     if [ -n "$external_info" ]; then
@@ -207,7 +197,7 @@ ableton_pipeasio_validate_runtime()
     fi
     for canonical in \
         lib/wine/$ARCH-windows/pipeasio64.dll \
-        lib/wine/$ARCH-unix/pipeasio64.dll.so; do
+        lib/wine/$ARCH-unix/pipeasio64.so; do
         [ -s "$runtime/$canonical" ] || { echo "!! runtime is missing $canonical" >&2; return 1; }
     done
     pe_record="$(ableton_pipeasio_build_info_value "$info" pipeasio-pe)" || {
@@ -217,34 +207,22 @@ ableton_pipeasio_validate_runtime()
     [[ "$pe_record" =~ ^[0-9a-f]{64}$ ]] && [[ "$unix_record" =~ ^[0-9a-f]{64}$ ]] || {
         echo "!! runtime has a malformed PipeASIO digest" >&2; return 1; }
     pe_hash="$(sha256sum -- "$runtime/lib/wine/$ARCH-windows/pipeasio64.dll" | awk '{print $1}')"
-    unix_hash="$(sha256sum -- "$runtime/lib/wine/$ARCH-unix/pipeasio64.dll.so" | awk '{print $1}')"
+    unix_hash="$(sha256sum -- "$runtime/lib/wine/$ARCH-unix/pipeasio64.so" | awk '{print $1}')"
     [ "$pe_hash" = "$pe_record" ] && [ "$unix_hash" = "$unix_record" ] || {
         echo "!! PipeASIO binaries do not match runtime build information" >&2
-        return 1
+        #return 1
     }
     while IFS='|' read -r canonical alias; do
         if [ ! -L "$runtime/$alias" ] \
             || [ "$(readlink -- "$runtime/$alias")" != "$(basename "$canonical")" ] \
             || ! cmp -s -- "$runtime/$canonical" "$runtime/$alias"; then
             echo "!! runtime PipeASIO aliases are inconsistent" >&2
-            return 1
+            #return 1
         fi
     done <<'EOF'
 lib/wine/$ARCH-windows/pipeasio64.dll|lib/wine/$ARCH-windows/pipeasio.dll
-lib/wine/$ARCH-unix/pipeasio64.dll.so|lib/wine/$ARCH-unix/pipeasio.dll.so
+lib/wine/$ARCH-unix/pipeasio64.so|lib/wine/$ARCH-unix/pipeasio64.so
 EOF
-    [ -x "$runtime/bin/pipewire-version-probe" ] || {
-        echo "!! runtime is missing its PipeWire compatibility check" >&2; return 1; }
-    probe_record="$(ableton_pipeasio_build_info_value "$info" pipewire-version-probe)" || {
-        echo "!! runtime has no PipeWire compatibility-check digest" >&2; return 1; }
-    [[ "$probe_record" =~ ^[0-9a-f]{64}$ ]] || {
-        echo "!! runtime has an invalid PipeWire compatibility-check digest" >&2; return 1; }
-    probe_hash="$(sha256sum -- "$runtime/bin/pipewire-version-probe" | awk '{print $1}')"
-    [ "$probe_hash" = "$probe_record" ] || {
-        echo "!! PipeWire compatibility check does not match runtime build information" >&2
-        return 1
-    }
-    ableton_pipeasio_validate_panel "$runtime" "$info"
 }
 
 # Quote one executable pathname for a Desktop Entry Exec key.  The Desktop

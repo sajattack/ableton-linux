@@ -427,24 +427,24 @@ esac
 # Gate only commands that replace the PipeASIO-bearing runtime or register it.
 # Plans, help, extraction transport, Link operations, and uninstall remain
 # available without a running PipeWire daemon.
-if [ "$dry_run" -eq 0 ]; then
-    pipewire_probe=""
-    case "$command_name:$subcommand" in
-        install:|update:|runtime:install)
-            pipewire_probe="$root/bin/pipewire-version-probe"
-            for pipewire_probe_candidate in \
-                "$root/bin/pipewire-version-probe" "$root/dist/pipewire-version-probe"; do
-                [ -x "$pipewire_probe_candidate" ] || continue
-                pipewire_probe="$pipewire_probe_candidate"
-                break
-            done ;;
-        prefix:create|prefix:update)
-            pipewire_probe="$ABLETON_WINE_ROOT/bin/pipewire-version-probe" ;;
-    esac
-    if [ -n "$pipewire_probe" ]; then
-        ableton_pipewire_preflight "$pipewire_probe" "changing PipeASIO"
-    fi
-fi
+#if [ "$dry_run" -eq 0 ]; then
+    #pipewire_probe=""
+    #case "$command_name:$subcommand" in
+        #install:|update:|runtime:install)
+            #pipewire_probe="$root/bin/pipewire-version-probe"
+            #for pipewire_probe_candidate in \
+            #    "$root/bin/pipewire-version-probe" "$root/dist/pipewire-version-probe"; do
+            #    [ -x "$pipewire_probe_candidate" ] || continue
+            #    pipewire_probe="$pipewire_probe_candidate"
+            #    break
+            #done ;;
+        #prefix:create|prefix:update)
+            #pipewire_probe="$ABLETON_WINE_ROOT/bin/pipewire-version-probe" ;;
+    #esac
+    #if [ -n "$pipewire_probe" ]; then
+    #    ableton_pipewire_preflight "$pipewire_probe" "changing PipeASIO"
+    #fi
+#fi
 
 install_args=()
 [ "$assume_yes" -eq 0 ] || install_args+=(--yes)

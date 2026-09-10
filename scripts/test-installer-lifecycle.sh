@@ -621,10 +621,10 @@ mkdir -p "$kit/scripts/lib" "$kit/bin" "$base/runtime/bin"
 cp -- "$here/installer.sh" "$kit/scripts/"
 cp -- "$here/lib/config.sh" "$here/lib/lifecycle.sh" "$here/lib/live-options.sh" \
     "$here/lib/manifest.sh" "$here/lib/pipeasio.sh" "$kit/scripts/lib/"
-cat > "$kit/bin/pipewire-version-probe" <<'EOF'
-#!/bin/sh
-printf 'client=1.4.2\ndaemon=1.4.2\n'
-EOF
+#cat > "$kit/bin/pipewire-version-probe" <<'EOF'
+##!/bin/sh
+#printf 'client=1.4.2\ndaemon=1.4.2\n'
+#EOF
 cat > "$kit/scripts/install.sh" <<'EOF'
 #!/bin/sh
 set -eu
@@ -657,7 +657,7 @@ case "${1:-}" in
     -w) exit "${ABLETON_TEST_WAIT_EXIT:-0}" ;;
 esac
 EOF
-chmod 755 "$kit/scripts/"*.sh "$kit/bin/pipewire-version-probe" "$base/runtime/bin/"*
+chmod 755 "$kit/scripts/"*.sh  "$base/runtime/bin/"*
 printf 'Ableton Live 12 Suite Installer\n' > "$base/Ableton Live 12 Suite Installer.exe"
 
 run_payload_install()

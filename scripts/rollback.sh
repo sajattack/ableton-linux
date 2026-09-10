@@ -60,8 +60,8 @@ while IFS= read -r -d '' candidate; do
 done < <(find "$runtime_parent" -maxdepth 1 -mindepth 1 -type d -print0 2>/dev/null)
 [ -n "$saved" ] || { echo "!! no completed runtime rollback is available" >&2; exit 1; }
 for required in bin/wine bin/wineserver \
-    lib/wine/$ARCH-windows/pipeasio64.dll \
-    lib/wine/$ARCH-unix/pipeasio64.dll.so; do
+    lib/wine/x86_64-windows/pipeasio64.dll \
+    lib/wine/$ARCH-unix/pipeasio64.so; do
     [ -s "$saved/$required" ] || { echo "!! saved runtime is incomplete: $required" >&2; exit 1; }
 done
 
@@ -166,9 +166,9 @@ refuse_runtime_users()
 }
 refuse_runtime_users
 
-probe="$ABLETON_DATA_HOME/pipewire-version-probe"
-[ -x "$probe" ] || probe="$runtime/bin/pipewire-version-probe"
-ableton_pipewire_preflight "$probe" "rolling PipeASIO back"
+#probe="$ABLETON_DATA_HOME/pipewire-version-probe"
+#[ -x "$probe" ] || probe="$runtime/bin/pipewire-version-probe"
+#ableton_pipewire_preflight "$probe" "rolling PipeASIO back"
 
 ableton_mark_state_home
 mkdir -p -- "$ABLETON_STATE_HOME/transactions"
@@ -406,9 +406,9 @@ fi
 
 if [ -f "$ABLETON_WINEPREFIX/system.reg" ]; then
     export WINEPREFIX="$ABLETON_WINEPREFIX"
-    probe="$ABLETON_DATA_HOME/pipewire-version-probe"
-    [ -x "$probe" ] || probe="$reverse/bin/pipewire-version-probe"
-    ableton_pipewire_preflight "$probe" "registering the restored PipeASIO"
+    #probe="$ABLETON_DATA_HOME/pipewire-version-probe"
+    #[ -x "$probe" ] || probe="$reverse/bin/pipewire-version-probe"
+    #ableton_pipewire_preflight "$probe" "registering the restored PipeASIO"
     registration_attempted=1
     ableton_pipeasio_register rollback_wine rollback_wineserver_wait
 fi

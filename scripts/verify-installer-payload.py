@@ -169,7 +169,7 @@ def expected_from_source(root: Path, info: Path, runtime: Path) -> dict[str, Exp
     expected["licenses/link-LICENSE.md"] = Expected("file", 0o644, data=license_result.stdout)
     add_parents(expected, "licenses/link-LICENSE.md")
 
-    for path in ("bin/cabextract", "bin/ableton-linkd", "bin/pipewire-version-probe"):
+    for path in ("bin/cabextract", "bin/ableton-linkd"):
         expected[path] = Expected("file", 0o755)
         add_parents(expected, path)
     return expected
@@ -321,7 +321,6 @@ def compare_payload(payload: Path, expected: dict[str, Expected], info: Path) ->
                     if member.size != len(wanted.data) or actual_hash != expected_hash:
                         fail(f"installer payload file differs from its trusted input: {path}")
                 generated_records = {
-                    "bin/pipewire-version-probe": b"pipewire-version-probe",
                     "bin/cabextract": b"cabextract-static",
                     "bin/ableton-linkd": b"ableton-linkd",
                 }

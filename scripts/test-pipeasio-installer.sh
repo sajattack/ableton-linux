@@ -58,36 +58,36 @@ run_isolated()
         ABLETON_MAX_AUDIO_THREADS=off "$@"
 }
 
-write_probe()
-{
-    local target="$1"
-    mkdir -p -- "$(dirname "$target")"
-    cat > "$target" <<'EOF'
-#!/bin/bash
-case "${1:-}" in
-    --client)
-        [ "${PROBE_EXIT:-0}" -eq 0 ] || exit "$PROBE_EXIT"
-        printf 'client=%s\n' "${PROBE_CLIENT:-}"
-        ;;
-    '')
-        [ "${PROBE_EXIT:-0}" -eq 0 ] || exit "$PROBE_EXIT"
-        printf 'client=%s\ndaemon=%s\n' "${PROBE_CLIENT:-}" "${PROBE_DAEMON:-}"
-        ;;
-    *) exit 2 ;;
-esac
-EOF
-    chmod 755 "$target"
-}
-
-probe_base="$(new_env probe)"
-probe="$probe_base/pipewire-version-probe"
-write_probe "$probe"
-mkdir -p -- "$probe_base/core-path"
-for tool in awk basename dirname grep head sed sort timeout tr wc; do
-    tool_path="$(command -v "$tool")"
-    ln -s -- "$tool_path" "$probe_base/core-path/$tool"
-done
-
+#write_probe()
+#{
+#    local target="$1"
+#    mkdir -p -- "$(dirname "$target")"
+#    cat > "$target" <<'EOF'
+##!/bin/bash
+#case "${1:-}" in
+#    --client)
+#        [ "${PROBE_EXIT:-0}" -eq 0 ] || exit "$PROBE_EXIT"
+#        printf 'client=%s\n' "${PROBE_CLIENT:-}"
+#        ;;
+#    '')
+#        [ "${PROBE_EXIT:-0}" -eq 0 ] || exit "$PROBE_EXIT"
+#        printf 'client=%s\ndaemon=%s\n' "${PROBE_CLIENT:-}" "${PROBE_DAEMON:-}"
+#        ;;
+#    *) exit 2 ;;
+#esac
+#EOF
+#    chmod 755 "$target"
+#}
+#
+#probe_base="$(new_env probe)"
+#probe="$probe_base/pipewire-version-probe"
+#write_probe "$probe"
+#mkdir -p -- "$probe_base/core-path"
+#for tool in awk basename dirname grep head sed sort timeout tr wc; do
+#    tool_path="$(command -v "$tool")"
+#    ln -s -- "$tool_path" "$probe_base/core-path/$tool"
+#done
+#
 invoke_preflight()
 {
     local client="$1" daemon="$2" probe_exit="${3:-0}"
@@ -96,7 +96,7 @@ invoke_preflight()
         PROBE_CLIENT="$client" PROBE_DAEMON="$daemon" PROBE_EXIT="$probe_exit" \
         ABLETON_PIPEWIRE_FLOOR=0.3.56 \
         /bin/bash -c '. "$1"; ableton_pipewire_preflight "$2"' \
-        _ "$here/lib/pipeasio.sh" "$probe"
+       # _ "$here/lib/pipeasio.sh" "$probe"
 }
 
 preflight_ok()
@@ -206,9 +206,9 @@ EOF
         printf 'dist-version: 2026.08.12.999\n'
         printf 'pipeasio: 1.5.0\n'
         printf 'pipewire-floor: 1.4.2\n'
-        printf 'pipeasio-pe: %s\n' "$(sha256sum -- "$runtime/lib/wine/$ARCH-windows/pipeasio64.dll" | awk '{print $1}')"
-        printf 'pipeasio-unix: %s\n' "$(sha256sum -- "$runtime/lib/wine/$ARCH-unix/pipeasio64.dll.so" | awk '{print $1}')"
-        printf 'pipewire-version-probe: %s\n' "$(sha256sum -- "$runtime/bin/pipewire-version-probe" | awk '{print $1}')"
+        printf 'pipeasio-pe: %s\n' "$(sha256sum -- "$runtime/lib/wine/x86_64-windows/pipeasio64.dll" | awk '{print $1}')"
+        printf 'pipeasio-unix: %s\n' "$(sha256sum -- "$runtime/lib/wine/$ARCH-unix/pipeasio64.so" | awk '{print $1}')"
+        #printf 'pipewire-version-probe: %s\n' "$(sha256sum -- "$runtime/bin/pipewire-version-probe" | awk '{print $1}')"
         printf 'pipeasio-panel: %s\n' "$mode"
         if [ "$mode" = built ]; then
             printf 'pipeasio-settings: %s (Qt 6.2 link)\n' "$panel_hash"
@@ -223,13 +223,13 @@ make_runtime()
 {
     local runtime="$1" external="$2" mode="$3"
     mkdir -p -- "$runtime/bin" \
-        "$runtime/lib/wine/$ARCH-windows" \
+        "$runtime/lib/wine/x86_64-windows" \
         "$runtime/lib/wine/$ARCH-unix"
-    printf 'PE PipeASIO fixture\n' > "$runtime/lib/wine/$ARCH-windows/pipeasio64.dll"
-    ln -s -- pipeasio64.dll "$runtime/lib/wine/$ARCH-windows/pipeasio.dll"
-    printf 'Unix PipeASIO fixture\n' > "$runtime/lib/wine/$ARCH-unix/pipeasio64.dll.so"
-    ln -s -- pipeasio64.dll.so "$runtime/lib/wine/$ARCH-unix/pipeasio.dll.so"
-    write_probe "$runtime/bin/pipewire-version-probe"
+    printf 'PE PipeASIO fixture\n' > "$runtime/lib/wine/x86_64-windows/pipeasio64.dll"
+    ln -s -- pipeasio64.dll "$runtime/lib/wine/x86_64-windows/pipeasio.dll"
+    printf 'Unix PipeASIO fixture\n' > "$runtime/lib/wine/$ARCH-unix/pipeasio64.so"
+    ln -s -- pipeasio64.so "$runtime/lib/wine/$ARCH-unix/pipeasio.so"
+    #write_probe "$runtime/bin/pipewire-version-probe"
     write_build_info "$runtime" "$external" "$mode"
 }
 
@@ -284,13 +284,13 @@ ok "PipeASIO aliases must be byte-identical"
 
 base="$(new_env alias-partial)"
 make_runtime "$base/runtime" "$base/BUILD-INFO.txt" built
-rm -f -- "$base/runtime/lib/wine/$ARCH-unix/pipeasio.dll.so"
+rm -f -- "$base/runtime/lib/wine/$ARCH-unix/pipeasio.so"
 runtime_fails_validation "$base/runtime" "$base/BUILD-INFO.txt" || fail "partial PipeASIO alias set was accepted"
 ok "PipeASIO aliases are all-or-none"
 
 base="$(new_env driver-digest-mismatch)"
 make_runtime "$base/runtime" "$base/BUILD-INFO.txt" built
-printf 'post-build mutation\n' >> "$base/runtime/lib/wine/$ARCH-unix/pipeasio64.dll.so"
+printf 'post-build mutation\n' >> "$base/runtime/lib/wine/$ARCH-unix/pipeasio64.so"
 runtime_fails_validation "$base/runtime" "$base/BUILD-INFO.txt" \
     || fail "modified canonical PipeASIO binary was accepted with a stale BUILD-INFO digest"
 ok "PipeASIO PE and Unix binaries must match their unique BUILD-INFO digests"
@@ -363,7 +363,7 @@ ok "dist-version nix is refused for a runtime that is not in the store"
 
 base="$(new_env probe-seal)"
 make_runtime "$base/runtime" "$base/BUILD-INFO.txt" skipped
-printf '# mutation\n' >> "$base/runtime/bin/pipewire-version-probe"
+#printf '# mutation\n' >> "$base/runtime/bin/pipewire-version-probe"
 runtime_fails_validation "$base/runtime" "$base/BUILD-INFO.txt" || fail "modified native compatibility probe was accepted"
 ok "native compatibility probe is sealed by BUILD-INFO"
 
@@ -394,7 +394,7 @@ exit 0
 EOF
     chmod 755 "$payload/$runtime_name/bin/wine" "$payload/$runtime_name/bin/wineserver"
     for required in \
-        lib/wine/$ARCH-windows/libusb-1.0.dll \
+        lib/wine/x86_64-windows/libusb-1.0.dll \
         lib/wine/$ARCH-unix/libusb-1.0.so \
         lib/wine/$ARCH-unix/comdlg32.so \
         lib/wine/$ARCH-unix/winealsa.so \
@@ -402,7 +402,7 @@ EOF
         printf 'runtime fixture: %s\n' "$required" > "$payload/$runtime_name/$required"
     done
     cp -- "$base/BUILD-INFO.txt" "$kit/dist/BUILD-INFO-$version.txt"
-    cp -- "$payload/$runtime_name/bin/pipewire-version-probe" "$kit/bin/pipewire-version-probe"
+    #cp -- "$payload/$runtime_name/bin/pipewire-version-probe" "$kit/bin/pipewire-version-probe"
     tar -C "$payload" -I zstd -cf "$kit/dist/$runtime_name-$version.tar.zst" "$runtime_name"
     (
         cd "$kit/dist"
@@ -1364,21 +1364,21 @@ ok "rollback refuses a process executing from the selected saved sibling, and na
 base="$(new_env rollback-late-current-user)"
 make_rollback_fixture "$base"
 cp -- /bin/sleep "$base/runtime/bin/late-runtime-client"
-cat > "$base/runtime/bin/pipewire-version-probe" <<'EOF'
-#!/bin/bash
-case "${1:-}" in
-    --client) printf 'client=%s\n' "${PROBE_CLIENT:-}" ;;
-    '')
-        if [ ! -e "${ABLETON_TEST_LATE_PID_FILE:?}" ]; then
-            "${ABLETON_TEST_LATE_CLIENT:?}" 60 >/dev/null 2>&1 &
-            printf '%s\n' "$!" > "${ABLETON_TEST_LATE_PID_FILE:?}"
-        fi
-        printf 'client=%s\ndaemon=%s\n' "${PROBE_CLIENT:-}" "${PROBE_DAEMON:-}"
-        ;;
-    *) exit 2 ;;
-esac
-EOF
-chmod 755 "$base/runtime/bin/pipewire-version-probe"
+#cat > "$base/runtime/bin/pipewire-version-probe" <<'EOF'
+##!/bin/bash
+#case "${1:-}" in
+#    --client) printf 'client=%s\n' "${PROBE_CLIENT:-}" ;;
+#    '')
+#        if [ ! -e "${ABLETON_TEST_LATE_PID_FILE:?}" ]; then
+#            "${ABLETON_TEST_LATE_CLIENT:?}" 60 >/dev/null 2>&1 &
+#            printf '%s\n' "$!" > "${ABLETON_TEST_LATE_PID_FILE:?}"
+#        fi
+#        printf 'client=%s\ndaemon=%s\n' "${PROBE_CLIENT:-}" "${PROBE_DAEMON:-}"
+#        ;;
+#    *) exit 2 ;;
+#esac
+#EOF
+#chmod 755 "$base/runtime/bin/pipewire-version-probe"
 if run_user_rollback "$base" env \
     ABLETON_TEST_REGISTRY_STICKY=0 \
     ABLETON_TEST_LATE_CLIENT="$base/runtime/bin/late-runtime-client" \

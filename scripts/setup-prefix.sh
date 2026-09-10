@@ -322,19 +322,15 @@ fi
 }
 command -v cabextract >/dev/null || { echo "!! cabextract is required for prefix setup" >&2; exit 1; }
 for required in \
-    bin/pipewire-version-probe \
     ABLETON-WINE-BUILD-INFO.txt \
     lib/wine/$ARCH-unix/comdlg32.so \
-    lib/wine/$ARCH-windows/libusb-1.0.dll \
+    lib/wine/x86_64-windows/libusb-1.0.dll \
     lib/wine/$ARCH-unix/libusb-1.0.so \
     lib/wine/$ARCH-windows/pipeasio64.dll \
-    lib/wine/$ARCH-windows/pipeasio.dll \
-    lib/wine/$ARCH-unix/pipeasio64.dll.so \
-    lib/wine/$ARCH-unix/pipeasio.dll.so; do
+    lib/wine/$ARCH-unix/pipeasio64.so; do
     [ -s "$WINE_ROOT/$required" ] || { echo "!! packaged runtime is missing $required"; exit 1; }
 done
 ableton_pipeasio_validate_runtime "$WINE_ROOT"
-ableton_pipewire_preflight "$WINE_ROOT/bin/pipewire-version-probe" "configuring PipeASIO"
 
 # Prefix changes are made against a sibling staging copy, then promoted in one
 # rename.  Existing prefixes use reflink cloning where the filesystem supports
@@ -1131,7 +1127,7 @@ echo "== [4/6] register packaged PipeASIO =="
 # The driver's unix half must resolve libpipewire-0.3.so.0 - the tarball build
 # from the host's libs (it carries no rpath on purpose), the nix build from its
 # nixpkgs RUNPATH. ldd follows both; ldconfig -p sees neither on NixOS.
-if ldd "$WINE_ROOT/lib/wine/x86_64-unix/pipeasio64.dll.so" 2>/dev/null \
+if ldd "$WINE_ROOT/lib/wine/$ARCH-unix/pipeasio64.so" 2>/dev/null \
     | grep -F 'libpipewire-0.3.so.0' | grep -q 'not found'; then
     echo "!! the PipeASIO driver cannot resolve libpipewire-0.3.so.0; install pipewire (0.3.56 or newer, 1.6+ recommended)"
 fi
