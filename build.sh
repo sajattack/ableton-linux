@@ -127,6 +127,7 @@ else
 fi
 
 mkdir -p dist "$here/.ccache"
+mkdir -p work
 echo "== [3/7] build installer helpers in the configured image =="
 ENGINE="$ENGINE" IMAGE="$IMAGE" \
     "$source_snapshot/scripts/build-cabextract-static.sh" \
@@ -141,6 +142,7 @@ echo "== [4/7] build Wine + PipeASIO in the container (JOBS=$JOBS) =="
 relabel=""
 if [ -f /sys/fs/selinux/enforce ]; then relabel=",Z"; fi
 "$ENGINE" run --rm \
+    -v "./work:/work:rw$relabel" \
     -v "$source_snapshot:/src:ro$relabel" \
     -v "$output_stage:/out:rw$relabel" \
     -v "$here/.ccache:/ccache:rw$relabel" \
