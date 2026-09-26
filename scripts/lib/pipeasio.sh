@@ -197,6 +197,7 @@ ableton_pipeasio_validate_runtime()
     fi
     for canonical in \
         lib/wine/$ARCH-windows/pipeasio64.dll \
+        lib/wine/arm64ec-windows/pipeasio64.dll \
         lib/wine/$ARCH-unix/pipeasio64.so; do
         [ -s "$runtime/$canonical" ] || { echo "!! runtime is missing $canonical" >&2; return 1; }
     done
@@ -221,6 +222,7 @@ ableton_pipeasio_validate_runtime()
         fi
     done <<'EOF'
 lib/wine/$ARCH-windows/pipeasio64.dll|lib/wine/$ARCH-windows/pipeasio.dll
+lib/wine/arm64ec-windows/pipeasio64.dll|lib/wine/arm64ec-windows/pipeasio.dll
 lib/wine/$ARCH-unix/pipeasio64.so|lib/wine/$ARCH-unix/pipeasio64.so
 EOF
 }
