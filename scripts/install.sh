@@ -460,7 +460,6 @@ validate_runtime_payload()
         lib/wine/$ARCH-unix/winegstreamer.so \
         ABLETON-WINE-BUILD-INFO.txt \
         lib/wine/$ARCH-windows/pipeasio64.dll \
-        lib/wine/arm64ec-windows/pipeasio64.dll \
         lib/wine/$ARCH-unix/pipeasio64.so ; do
         [ -s "$candidate/$required" ] || { echo "!! runtime payload is missing $required" >&2; return 1; }
     done

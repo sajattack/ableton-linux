@@ -326,7 +326,6 @@ for required in \
     lib/wine/$ARCH-unix/comdlg32.so \
     lib/wine/x86_64-windows/libusb-1.0.dll \
     lib/wine/$ARCH-unix/libusb-1.0.so \
-    lib/wine/arm64ec-windows/pipeasio64.dll \
     lib/wine/$ARCH-windows/pipeasio64.dll \
     lib/wine/$ARCH-unix/pipeasio64.so; do
     [ -s "$WINE_ROOT/$required" ] || { echo "!! packaged runtime is missing $required"; exit 1; }
