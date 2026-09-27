@@ -1238,3 +1238,13 @@ index a53b6b68304..2ee4831c750 100644
 -- 
 2.55.0
 
+--- a/tools/winegcc/winegcc.c	2026-09-26 22:59:09.609488137 +0000
++++ b/tools/winegcc/winegcc.c	2026-09-26 22:58:22.399190491 +0000
+@@ -680,6 +680,7 @@
+    case CPU_x86_64:  return "/x86_64-linux-gnu";
+    case CPU_ARM:     return "/arm-linux-gnueabi";
+    case CPU_ARM64:   return "/aarch64-linux-gnu";
++   case CPU_ARM64EC:  return "/arm64ec-linux-gnu";
+    default:
+        assert(0);
+    }
