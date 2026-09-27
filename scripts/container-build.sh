@@ -285,7 +285,7 @@ echo "   libusb bridge: PE $bridge_pe_sha / Unix $bridge_unix_sha"
 
 echo "== [4/8] build PipeWire probe + PipeASIO 1.5.0 against THIS Wine (upstream CMake + CTest) =="
 mkdir -p "$WORK/pipeasio"
-git clone https://github.com/sajattack/pipeasio.git --single-branch --branch=saj/force-arm64ec --depth=1 "$WORK/pipeasio"
+git clone https://github.com/M0n7y5/pipeasio.git --single-branch --branch=master --depth=1 "$WORK/pipeasio"
 #tar xzf "$SRC/vendor/pipeasio-1.5.0.tar.gz" -C "$WORK/pipeasio" --strip-components=1
 cd "$WORK/pipeasio"
 # Apply the pipeasio patch series (patches/pipeasio/): every *.patch, sorted;
